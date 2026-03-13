@@ -1,0 +1,15 @@
+node_modules/
+dist/*
+*.log
+*.pid
+*.seed
+*.swp
+.idea/
+.vscode/
+*.swo
+*.swocket
+*.sublime-project
+*.sublime-workspace
+*.DS_Store
+*.tmp
+*.tmp.*

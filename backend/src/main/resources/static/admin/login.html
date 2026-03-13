@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 480px; margin: auto; }
+    input { width: 100%; padding: 0.5rem; margin: 0.5rem 0; }
+    button { padding: 0.5rem 1rem; }
+    .error { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Admin Login</h1>
+  <div id="error" class="error"></div>
+
+  <form id="loginForm">
+    <label>
+      Email
+      <input type="email" id="email" value="madalamanikanta38@gmail.com" required />
+    </label>
+    <label>
+      Password
+      <input type="password" id="password" value="madalamani@7075" required />
+    </label>
+    <button type="submit">Login</button>
+  </form>
+
+  <script>
+    const errorEl = document.getElementById('error');
+
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorEl.textContent = '';
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+          redirect: 'follow'
+        });
+
+        if (response.redirected) {
+          window.location.href = response.url;
+          return;
+        }
+
+        const body = await response.json();
+        if (!response.ok) {
+          errorEl.textContent = body.error || 'Login failed';
+          return;
+        }
+
+        window.location.href = '/admin/dashboard.html';
+      } catch (e) {
+        errorEl.textContent = 'Unable to login. Please try again.';
+      }
+    });
+  </script>
+</body>
+</html>

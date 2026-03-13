@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 2rem; max-width: 700px; margin: auto; }
+    pre { background: #f7f7f7; padding: 1rem; border-radius: 6px; }
+    button { padding: 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Admin Dashboard</h1>
+  <div id="content">Loading...</div>
+  <button id="logout" style="margin-top: 1rem;">Logout</button>
+
+  <script>
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/admin/dashboard', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = '/admin/login.html';
+          return;
+        }
+        const data = await res.json();
+        document.getElementById('content').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+      } catch (e) {
+        window.location.href = '/admin/login.html';
+      }
+    }
+
+    document.getElementById('logout').addEventListener('click', async () => {
+      await fetch('/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login.html';
+    });
+
+    loadDashboard();
+  </script>
+</body>
+</html>
