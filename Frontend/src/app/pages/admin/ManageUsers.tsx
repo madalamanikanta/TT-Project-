@@ -71,7 +71,7 @@ export default function ManageUsers() {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <p className="text-gray-600 mb-2">Students</p>
               <p className="text-3xl font-semibold text-gray-900">
-                {users.filter(u => u.role === 'STUDENT' || u.role === 'student').length}
+                {users.filter(u => u.role === 'USER' || u.role === 'user').length}
               </p>
             </div>
             <div className="bg-white rounded-lg border border-gray-200 p-6">

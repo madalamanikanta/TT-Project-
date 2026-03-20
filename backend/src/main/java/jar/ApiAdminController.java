@@ -44,51 +44,86 @@ public class ApiAdminController {
         try {
             long totalUsers = Math.max(0, userRepository.count());
             long totalAdmins = Math.max(0, userRepository.countByRole(User.Role.ADMIN));
+            // Ensure we count both STUDENT and any remaining legacy USER roles if migration hasn't run yet
             long totalStudents = Math.max(0, totalUsers - totalAdmins);
             long totalInternships = Math.max(0, internshipRepository.count());
             long totalSaved = Math.max(0, savedInternshipRepository.count());
 
             List<Map<String, String>> activities = new java.util.ArrayList<>();
 
-            userRepository.findAll().stream()
+            List<User> allUsers = userRepository.findAll();
+            if (allUsers != null) {
+                allUsers.stream()
+                    .filter(java.util.Objects::nonNull)
                     .sorted(java.util.Comparator.comparing(User::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
                     .limit(5)
-                    .forEach(u -> activities.add(Map.of(
-                            "action", "User registered",
-                            "item", u.getName() != null ? u.getName() : "Unknown User",
-                            "time", u.getCreatedAt() != null ? u.getCreatedAt().toString() : "1970-01-01T00:00:00"
-                    )));
+                    .forEach(u -> {
+                        Map<String, String> activity = new java.util.HashMap<>();
+                        activity.put("action", "User registered");
+                        activity.put("item", u.getName() != null ? u.getName() : "Unknown User");
+                        activity.put("time", u.getCreatedAt() != null ? u.getCreatedAt().toString() : "1970-01-01T00:00:00");
+                        activities.add(activity);
+                    });
+            }
 
-            internshipRepository.findAll().stream()
+            List<Internship> allInternships = internshipRepository.findAll();
+            if (allInternships != null) {
+                allInternships.stream()
+                    .filter(java.util.Objects::nonNull)
                     .sorted(java.util.Comparator.comparing(Internship::getCreatedAt, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())).reversed())
                     .limit(5)
-                    .forEach(i -> activities.add(Map.of(
-                            "action", "Internship created",
-                            "item", i.getTitle() != null ? i.getTitle() : "Unknown Internship",
-                            "time", i.getCreatedAt() != null ? i.getCreatedAt().toString() : "1970-01-01T00:00:00"
-                    )));
+                    .forEach(i -> {
+                        Map<String, String> activity = new java.util.HashMap<>();
+                        activity.put("action", "Internship created");
+                        activity.put("item", i.getTitle() != null ? i.getTitle() : "Unknown Internship");
+                        activity.put("time", i.getCreatedAt() != null ? i.getCreatedAt().toString() : "1970-01-01T00:00:00");
+                        activities.add(activity);
+                    });
+            }
 
-            savedInternshipRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "savedAt")).stream()
+            List<SavedInternship> allSaved = savedInternshipRepository.findAll(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "savedAt"));
+            if (allSaved != null) {
+                allSaved.stream()
+                    .filter(java.util.Objects::nonNull)
                     .limit(5)
                     .forEach(s -> {
                         String title = "Unknown Internship";
                         if (s.getInternshipId() != null) {
-                            internshipRepository.findById(s.getInternshipId()).ifPresent(internship -> {
+                            try {
+                                internshipRepository.findById(s.getInternshipId()).ifPresent(internship -> {
+                                    if (internship != null && internship.getTitle() != null) {
+                                        // use effectively final or final variable
+                                    }
+                                });
+                                // Re-fetch title properly to avoid lambda issues
+                                Internship internship = internshipRepository.findById(s.getInternshipId()).orElse(null);
                                 if (internship != null && internship.getTitle() != null) {
                                     title = internship.getTitle();
                                 }
-                            });
+                            } catch (Exception e) {
+                                logger.warn("Error fetching internship title for saved record", e);
+                            }
                         }
-                        activities.add(Map.of(
-                                "action", "Internship saved",
-                                "item", title,
-                                "time", s.getSavedAt() != null ? s.getSavedAt().toString() : "1970-01-01T00:00:00"
-                        ));
+                        Map<String, String> activity = new java.util.HashMap<>();
+                        activity.put("action", "Internship saved");
+                        activity.put("item", title);
+                        activity.put("time", s.getSavedAt() != null ? s.getSavedAt().toString() : "1970-01-01T00:00:00");
+                        activities.add(activity);
                     });
+            }
 
-            activities.sort((a,b) -> b.get("time").compareTo(a.get("time")));
+            activities.sort((a,b) -> {
+                String t1 = a.get("time");
+                String t2 = b.get("time");
+                if (t1 == null) return 1;
+                if (t2 == null) return -1;
+                return t2.compareTo(t1);
+            });
 
-            List<Map<String, String>> recentActivities = activities.stream().limit(10).collect(Collectors.toList());
+            List<Map<String, String>> recentActivities = activities.stream()
+                    .filter(java.util.Objects::nonNull)
+                    .limit(10)
+                    .collect(Collectors.toList());
             if (recentActivities.isEmpty()) {
                 recentActivities = List.of(Map.of("action", "System Started", "item", "System", "time", "Just now"));
             }
@@ -104,7 +139,7 @@ public class ApiAdminController {
 
         } catch (Exception e) {
             logger.error("Error preparing admin dashboard", e);
-            return ResponseEntity.ok(Map.of(
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "totalUsers", 0,
                     "totalAdmins", 0,
                     "totalStudents", 0,

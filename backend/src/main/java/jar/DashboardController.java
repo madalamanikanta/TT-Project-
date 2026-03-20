@@ -57,7 +57,7 @@ public class DashboardController {
                 safeResponse.put("matches", List.of());
                 safeResponse.put("matchCount", 0);
                 safeResponse.put("message", "User not authenticated");
-                return ResponseEntity.ok(safeResponse);
+                return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).body(safeResponse);
             }
 
             Set<Skill> skillSet = userService.getUserSkills(userId);
@@ -106,7 +106,7 @@ public class DashboardController {
             safeResponse.put("matches", List.of());
             safeResponse.put("matchCount", 0);
             safeResponse.put("error", "Internal error: " + e.getMessage());
-            return ResponseEntity.ok(safeResponse);
+            return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR).body(safeResponse);
         }
     }
 

@@ -21,6 +21,12 @@ public class SchemaInspector implements CommandLineRunner {
             try (java.sql.Statement stmt = conn.createStatement()) {
                 stmt.execute("ALTER TABLE internships DROP COLUMN IF EXISTS organization");
                 System.out.println("Successfully dropped organization column from internships table.");
+                
+                // Migrate legacy USER roles to STUDENT
+                int rows = stmt.executeUpdate("UPDATE users SET role = 'STUDENT' WHERE role = 'USER'");
+                if (rows > 0) {
+                    System.out.println("Migrated " + rows + " users from legacy USER role to STUDENT.");
+                }
             } catch (Exception e) {
                 System.out.println("Error dropping column: " + e.getMessage());
             }

@@ -47,14 +47,15 @@ public class User implements Serializable {
     private String phone;
 
     public enum Role {
-        USER,
-        ADMIN
+        STUDENT,
+        ADMIN,
+        USER
     }
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
-    private Role role = Role.USER;
+    private Role role = Role.STUDENT;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default

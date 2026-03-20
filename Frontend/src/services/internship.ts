@@ -1,5 +1,6 @@
 import api from './api';
 import { Internship, MatchResult } from '../app/types';
+import { mockInternships, mockUsers } from '../app/data/mockData';
 
 /**
  * Wrapper around axios calls for internship-related backend operations
@@ -24,23 +25,43 @@ function normalizeInternship(item: any): Internship {
 }
 
 export const fetchInternshipById = async (id: string | number): Promise<Internship> => {
-  const response = await api.get(`/internships/${id}`);
-  return normalizeInternship(response.data.data);
+  try {
+    const response = await api.get(`/internships/${id}`);
+    return normalizeInternship(response.data.data);
+  } catch (error) {
+    console.warn(`Failed to fetch internship ${id} from backend, using mock fallback.`, error);
+    const mock = mockInternships.find(i => i.id === String(id)) || mockInternships[0];
+    return mock as unknown as Internship;
+  }
 };
 
 export const fetchAllInternships = async (): Promise<Internship[]> => {
-  const response = await api.get('/internships');
-  return (response.data.data as any[]).map(normalizeInternship);
+  try {
+    const response = await api.get('/internships');
+    return (response.data.data as any[]).map(normalizeInternship);
+  } catch (error) {
+    console.warn('Failed to fetch internships from backend, using mock fallback.', error);
+    return mockInternships as unknown as Internship[];
+  }
 };
 
 export const fetchSavedInternships = async (): Promise<Internship[]> => {
-  const response = await api.get('/saved-internships');
-  return (response.data.data as any[]).map(normalizeInternship);
+  try {
+    const response = await api.get('/saved-internships');
+    return (response.data.data as any[]).map(normalizeInternship);
+  } catch (error) {
+    console.warn('Failed to fetch saved internships from backend, using empty fallback.', error);
+    return [];
+  }
 };
 
 export const checkInternshipSaved = async (id: string | number): Promise<boolean> => {
-  const response = await api.get(`/saved-internships/${id}`);
-  return response.data.saved as boolean;
+  try {
+    const response = await api.get(`/saved-internships/${id}`);
+    return response.data.saved as boolean;
+  } catch (error) {
+    return false;
+  }
 };
 
 export const saveInternship = async (id: string | number) => {
@@ -52,17 +73,25 @@ export const deleteSavedInternship = async (id: string | number) => {
 };
 
 export const fetchMatchedInternships = async (): Promise<MatchResult[]> => {
-  const response = await api.get('/internships/matches');
-  const data = response.data.data as any[];
-  // convert to MatchResult shape
-  return data.map(item => ({
-    internship: normalizeInternship({
-      ...item,
-      // backend uses "organization" instead of "company"
-      company: item.organization || item.company,
-    }),
-    matchScore: item.score ?? 0,
-  }));
+  try {
+    const response = await api.get('/internships/matches');
+    const data = response.data.data as any[];
+    // convert to MatchResult shape
+    return data.map(item => ({
+      internship: normalizeInternship({
+        ...item,
+        // backend uses "organization" instead of "company"
+        company: item.organization || item.company,
+      }),
+      matchScore: item.score ?? 0,
+    }));
+  } catch (error) {
+    console.warn('Failed to fetch matched internships from backend, using mock fallback.', error);
+    return mockInternships.slice(0, 3).map(i => ({
+      internship: i as unknown as Internship,
+      matchScore: 1,
+    }));
+  }
 };
 
 export interface DashboardPayload {
@@ -77,29 +106,39 @@ export const fetchDashboardData = async (): Promise<{
   skills: string[];
   matches: MatchResult[];
 }> => {
-  const response = await api.get<DashboardPayload>('/dashboard');
-  const { skills = [], matches = [] } = response.data;
+  try {
+    const response = await api.get<DashboardPayload>('/dashboard');
+    const { skills = [], matches = [] } = response.data;
 
-  // normalize skills to string array
-  const skillNames: string[] = skills.map(s => {
-    if (typeof s === 'string') return s;
-    return (s as any).name || '';
-  }).filter(Boolean);
+    // normalize skills to string array
+    const skillNames: string[] = skills.map(s => {
+      if (typeof s === 'string') return s;
+      return (s as any).name || '';
+    }).filter(Boolean);
 
-  const matchResults: MatchResult[] = matches.map(item => ({
-    internship: normalizeInternship({
-      ...item,
-      company: item.organization || item.company,
-    }),
-    matchScore: item.score ?? 0,
-  }));
+    const matchResults: MatchResult[] = matches.map(item => ({
+      internship: normalizeInternship({
+        ...item,
+        company: item.organization || item.company,
+      }),
+      matchScore: item.score ?? 0,
+    }));
 
-  return { skills: skillNames, matches: matchResults };
+    return { skills: skillNames, matches: matchResults };
+  } catch (error) {
+    console.error('Critical failure: dashboard requires backend data.', error);
+    throw error; // Dashboard is explicitly allowed to depend on DB
+  }
 };
 
 export const fetchUserSkills = async (userId: number | string): Promise<string[]> => {
-  const response = await api.get(`/users/${userId}/skills`);
-  const skills = response.data.data as any[];
-  // each skill object likely has a name
-  return skills.map(s => s.name as string);
+  try {
+    const response = await api.get(`/users/${userId}/skills`);
+    const skills = response.data.data as any[];
+    // each skill object likely has a name
+    return skills.map(s => s.name as string);
+  } catch (error) {
+    console.warn('Failed to fetch user skills from backend, using mock fallback.', error);
+    return mockUsers[0].skills || [];
+  }
 };

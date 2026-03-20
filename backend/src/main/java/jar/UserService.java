@@ -44,7 +44,7 @@ public class UserService {
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .phone(phone)
-                .role(User.Role.USER)
+                .role(User.Role.STUDENT)
                 .isActive(true)
                 .build();
 
@@ -188,11 +188,15 @@ public class UserService {
     public java.util.Set<Skill> getUserSkills(Long userId) {
         try {
             User user = userRepository.findByIdWithSkills(userId)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            return user.getSkills() != null ? user.getSkills() : java.util.Set.of();
+                    .orElse(null);
+            if (user == null) {
+                logger.warn("User {} not found when fetching skills", userId);
+                return java.util.Collections.emptySet();
+            }
+            return user.getSkills() != null ? user.getSkills() : java.util.Collections.emptySet();
         } catch (Exception e) {
             logger.error("Error fetching user skills for {}", userId, e);
-            return java.util.Set.of();
+            return java.util.Collections.emptySet();
         }
     }
 

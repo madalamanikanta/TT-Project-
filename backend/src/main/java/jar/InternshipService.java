@@ -328,13 +328,10 @@ public class InternshipService {
             }
             logger.debug("Total internships in database: {}", allInternships.size());
 
-            // If user has no skills, return all internships sorted by creation date
-            if (userSkills.isEmpty()) {
-                logger.info("User has no skills, returning all internships sorted by date");
-                return allInternships.stream()
-                        .map(internship -> new InternshipMatchResult(internship, 0))
-                        .sorted(Comparator.comparing(InternshipMatchResult::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder())).reversed())
-                        .collect(Collectors.toList());
+            // If user has no skills, return an empty list
+            if (userSkills == null || userSkills.isEmpty()) {
+                logger.info("User has no skills, returning empty matching list.");
+                return List.of();
             }
 
             // Match internships using weighted scoring
@@ -372,7 +369,7 @@ public class InternshipService {
             }
 
             Set<String> userSkillNames = userSkills.stream()
-                    .map(Skill::getName)
+                    .map(s -> s.getName())
                     .filter(Objects::nonNull)
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
@@ -380,7 +377,7 @@ public class InternshipService {
                     .collect(Collectors.toSet());
 
             String titleLower = internship.getTitle() != null ? internship.getTitle().toLowerCase() : "";
-            Set<Skill> requiredSkills = internship.getSkills() != null ? internship.getSkills() : Set.of();
+            Set<Skill> requiredSkills = internship.getSkills() != null ? internship.getSkills() : java.util.Collections.emptySet();
 
             for (Skill requiredSkill : requiredSkills) {
                 if (requiredSkill == null || requiredSkill.getName() == null) {
@@ -411,7 +408,7 @@ public class InternshipService {
                 if (!userSkill.isEmpty() && titleLower.contains(userSkill)) {
                     boolean isRequiredSkill = requiredSkills.stream()
                             .filter(Objects::nonNull)
-                            .map(Skill::getName)
+                            .map(s -> s.getName())
                             .filter(Objects::nonNull)
                             .map(String::toLowerCase)
                             .anyMatch(userSkill::equals);
@@ -450,10 +447,10 @@ public class InternshipService {
                     .build();
         }
 
-        java.util.Set<Skill> effectiveSkills = internship.getSkills() != null ? internship.getSkills() : java.util.Set.of();
+        java.util.Set<Skill> effectiveSkills = internship.getSkills() != null ? internship.getSkills() : java.util.Collections.emptySet();
         java.util.List<String> skillNames = effectiveSkills.stream()
                 .filter(java.util.Objects::nonNull)
-                .map(Skill::getName)
+                .map(s -> s.getName())
                 .filter(java.util.Objects::nonNull)
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())

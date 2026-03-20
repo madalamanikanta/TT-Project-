@@ -63,15 +63,19 @@ public class UserSkillController {
             }
 
             Set<Skill> userSkills = userService.getUserSkills(userId);
+            java.util.List<jar.dto.SkillDTO> skillDTOs = userSkills.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(s -> jar.dto.SkillDTO.builder().id(s.getId()).name(s.getName()).build())
+                .collect(java.util.stream.Collectors.toList());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Skills added successfully");
             // keep old key for backward compatibility
-            response.put("skills", userSkills);
+            response.put("skills", skillDTOs);
             // standardize on "data" like other controllers
-            response.put("data", userSkills);
-            response.put("skillCount", userSkills.size());
+            response.put("data", skillDTOs);
+            response.put("skillCount", skillDTOs.size());
 
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -95,13 +99,17 @@ public class UserSkillController {
             logger.info("Fetching skills for user: {}", userId);
 
             Set<Skill> skills = userService.getUserSkills(userId);
+            java.util.List<jar.dto.SkillDTO> skillDTOs = skills.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(s -> jar.dto.SkillDTO.builder().id(s.getId()).name(s.getName()).build())
+                .collect(java.util.stream.Collectors.toList());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("userId", userId);
-            response.put("skillCount", skills.size());
-            response.put("skills", skills);
-            response.put("data", skills);
+            response.put("skillCount", skillDTOs.size());
+            response.put("skills", skillDTOs);
+            response.put("data", skillDTOs);
 
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -132,13 +140,17 @@ public class UserSkillController {
             userService.removeSkillFromUser(userId, skill);
 
             Set<Skill> userSkills = userService.getUserSkills(userId);
+            java.util.List<jar.dto.SkillDTO> skillDTOs = userSkills.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(s -> jar.dto.SkillDTO.builder().id(s.getId()).name(s.getName()).build())
+                .collect(java.util.stream.Collectors.toList());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "Skill removed successfully");
-            response.put("skills", userSkills);
-            response.put("data", userSkills);
-            response.put("skillCount", userSkills.size());
+            response.put("skills", skillDTOs);
+            response.put("data", skillDTOs);
+            response.put("skillCount", skillDTOs.size());
 
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
