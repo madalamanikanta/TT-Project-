@@ -5,7 +5,7 @@
 Set this in Vercel and in your local frontend env file:
 
 ```env
-VITE_API_BASE_URL=https://smart-internship-skill-matching-portal-2.onrender.com
+VITE_API_BASE_URL=https://smart-internship-skill-matching-portal.onrender.com
 VITE_API_TIMEOUT=30000
 ```
 
@@ -21,7 +21,7 @@ VITE_API_TIMEOUT=30000
 - Add `VITE_API_BASE_URL` in the Vercel project settings
 - Redeploy after changing the env var
 - Confirm the browser console prints the expected API base URL
-- Confirm Network requests go to `https://smart-internship-skill-matching-portal-2.onrender.com/api/...`
+- Confirm Network requests go to `https://smart-internship-skill-matching-portal.onrender.com/api/...`
 
 ## Common Problems
 
