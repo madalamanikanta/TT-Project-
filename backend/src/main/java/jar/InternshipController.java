@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(originPatterns = {"http://localhost:*", "https://*.vercel.app"}, allowCredentials = "true")
 @RequestMapping("/api/internships")
 public class InternshipController {
 

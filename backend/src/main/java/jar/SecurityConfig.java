@@ -10,9 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.Customizer;
 
 import org.springframework.http.HttpMethod;
 import java.util.Arrays;
@@ -32,7 +30,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -53,27 +51,6 @@ public class SecurityConfig {
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-        // Public APIs (used by frontend) can be called from dev frontend ports.
-        CorsConfiguration apiCors = new CorsConfiguration();
-        apiCors.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:3000"
-        ));
-        apiCors.setAllowedOriginPatterns(Arrays.asList("http://localhost:*"));
-        apiCors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        apiCors.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
-        apiCors.setExposedHeaders(Arrays.asList("Authorization", "Set-Cookie"));
-        apiCors.setAllowCredentials(true);
-        source.registerCorsConfiguration("/**", apiCors);
-
-        return source;
     }
 
     @Bean
